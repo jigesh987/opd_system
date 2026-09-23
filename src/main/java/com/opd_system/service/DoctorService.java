@@ -14,10 +14,10 @@ public class DoctorService {
     private final DoctorRepository repo;
 
     public List<Doctor> getAll() {
-        return repo.findByActiveTrue();
+        return repo.findByIsActiveTrue();
     }
 
     public List<Doctor> getByDepartment(String department) {
-        return repo.findByDepartmentAndActiveTrue(department);
+        return repo.findByDepartmentAndIsActiveTrue(department);
     }
 }

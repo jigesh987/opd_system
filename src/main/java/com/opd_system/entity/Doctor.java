@@ -36,8 +36,8 @@ public class Doctor {
     private String cabinNo;
 
     @Column(length = 50)
-    private String opdDays = "Mon - Sat";
+    private String opdDays;
 
     @Column(nullable = false)
-    private boolean active = true;
+    private boolean isActive = true;
 }

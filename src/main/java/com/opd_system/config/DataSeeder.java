@@ -67,16 +67,23 @@ public class DataSeeder {
         ));
     }
 
-    private Doctor doctor(String name, String dept, String spec, String qual, String exp, String cabin, String days, String slots) {
+    private Doctor doctor(String name, String dept, String spec, String qual,
+                          String exp, String cabin, String days, String slots) {
+
         Doctor d = new Doctor();
-        d.setName(name); d.setDepartment(dept);
-        d.setSpecialization(spec); d.setQualification(qual);
-        d.setExperience(exp); d.setCabinNo(cabin);
+
+        d.setName(name);
+        d.setDepartment(dept);
+        d.setSpecialization(spec);
+        d.setQualification(qual);
+        d.setExperience(exp);
+        d.setCabinNo(cabin);
         d.setOpdDays(days);
         d.setAvailableSlots(slots);
+        d.setActive(true);
+
         return d;
     }
-
     private void seedAppointments() {
         if (appointmentRepo.count() > 0) return;
         LocalDate base = LocalDate.now().plusDays(1);

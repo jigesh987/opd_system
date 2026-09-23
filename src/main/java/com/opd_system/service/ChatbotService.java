@@ -184,7 +184,7 @@ public class ChatbotService {
     }
 
     private String buildDoctorContext() {
-        return doctorRepository.findByActiveTrue().stream()
+        return doctorRepository.findByIsActiveTrue().stream()
             .collect(Collectors.groupingBy(Doctor::getDepartment))
             .entrySet().stream()
             .map(entry -> {
