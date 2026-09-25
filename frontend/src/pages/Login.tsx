@@ -1,11 +1,13 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api } from "../data/api";
 
 export default function Login() {
   const { t, setAuthUser } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
+  const mobileChanged = !!(location.state as any)?.mobileChanged;
   const [mode, setMode] = useState<"login" | "register">("login");
   const [mobile, setMobile] = useState("");
   const [displayUsername, setDisplayUsername] = useState("");
@@ -40,6 +42,16 @@ export default function Login() {
       <div className="login-card">
         <div className="login-icon">🏥</div>
         <h2 className="login-title">{mode === "login" ? t("loginTitle") : t("registerTitle")}</h2>
+
+        {mobileChanged && (
+          <div style={{
+            background: "rgba(34,197,94,0.12)", border: "1px solid rgba(34,197,94,0.35)",
+            borderRadius: "0.5rem", padding: "0.75rem 1rem",
+            color: "#86efac", fontSize: "0.875rem", marginBottom: "1rem",
+          }}>
+            ✅ Mobile number changed successfully. Please log in with your new mobile number.
+          </div>
+        )}
 
         {error && <div className="form-error login-error" role="alert">{error}</div>}
 

@@ -2,6 +2,8 @@ package com.opd_system.service;
 
 import com.opd_system.dto.AuthRequest;
 import com.opd_system.dto.AuthResponse;
+import com.opd_system.dto.MobileChangeRequest;
+import com.opd_system.dto.OtpVerifyRequest;
 import com.opd_system.dto.ProfileRequest;
 import com.opd_system.dto.ProfileResponse;
 import com.opd_system.entity.Doctor;
@@ -11,6 +13,7 @@ import com.opd_system.repository.UserRepository;
 import com.opd_system.security.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -29,6 +32,7 @@ public class AuthService {
     private final DoctorRepository doctorRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder encoder;
+    private final OtpService otpService;
 
     public AuthResponse login(AuthRequest req) {
 
@@ -146,6 +150,79 @@ public class AuthService {
         return toProfileResponse(
                 userRepository.findByMobile(mobile).orElseThrow()
         );
+    }
+
+    // ── Mobile change — Step 1: verify password + send OTP ────────────────────
+
+    /**
+     * Step 1 of the mobile change flow.
+     * - Re-authenticates the user using their current password.
+     * - Checks the new mobile is not already taken.
+     * - Generates and "sends" a 6-digit OTP to the new mobile.
+     */
+    public void initiateChangeMyMobile(String currentMobile, MobileChangeRequest req) {
+
+        // Load the user to verify password
+        User user = userRepository.findByMobile(currentMobile)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+        // Verify current password — this is the re-authentication gate
+        if (!encoder.matches(req.getCurrentPassword(), user.getPassword())) {
+            throw new BadCredentialsException("Current password is incorrect");
+        }
+
+        // Ensure new mobile is different from the current one
+        if (currentMobile.equals(req.getNewMobile())) {
+            throw new IllegalArgumentException("New mobile number must be different from your current mobile number");
+        }
+
+        // Ensure new mobile is not already registered by someone else
+        if (userRepository.existsByMobile(req.getNewMobile())) {
+            throw new IllegalArgumentException("This mobile number is already registered with another account");
+        }
+
+        // Generate OTP and send to new mobile
+        otpService.generateAndSend(currentMobile, req.getNewMobile());
+    }
+
+    // ── Mobile change — Step 2: verify OTP + commit change ────────────────────
+
+    /**
+     * Step 2 of the mobile change flow.
+     * - Verifies the OTP against what was generated in Step 1.
+     * - Updates User.mobile in the database.
+     * - Consumes (invalidates) the OTP so it cannot be reused.
+     *
+     * After this returns, the caller should clear the client JWT and redirect
+     * to login. Any subsequent request using the old JWT will fail because the
+     * username (old mobile) no longer matches any active user record for that token.
+     *
+     * @return the new mobile that was saved — the client must use it to log in next
+     */
+    public String confirmChangeMyMobile(String currentMobile, OtpVerifyRequest req) {
+
+        // Verify the OTP (checks TTL + target mobile match)
+        if (!otpService.verify(currentMobile, req.getNewMobile(), req.getOtp())) {
+            throw new IllegalArgumentException("Invalid or expired OTP. Please request a new OTP.");
+        }
+
+        // Double-check: ensure no one registered the new number in the window between step 1 and step 2
+        if (userRepository.existsByMobile(req.getNewMobile())) {
+            otpService.invalidate(currentMobile);
+            throw new IllegalArgumentException("This mobile number was registered by someone else. Please start over.");
+        }
+
+        // Commit the change
+        User user = userRepository.findByMobile(currentMobile)
+                .orElseThrow(() -> new IllegalArgumentException("User session invalid. Please log in again."));
+
+        user.setMobile(req.getNewMobile());
+        userRepository.save(user);
+
+        // Consume the OTP — prevents replay attacks
+        otpService.invalidate(currentMobile);
+
+        return req.getNewMobile();
     }
 
     // ── Helpers ───────────────────────────────────────────────────────────────

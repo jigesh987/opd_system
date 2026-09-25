@@ -156,4 +156,27 @@ export const api = {
 
   toggleDoctorStatus: (id: number, active?: boolean) =>
     request<DoctorApi>(`/admin/doctors/${id}/status${active !== undefined ? `?active=${active}` : ""}`, { method: "PATCH" }),
+
+  // ── Mobile Change ────────────────────────────────────────────────────────────
+
+  /**
+   * Step 1: Verify current password + request OTP to new mobile.
+   * Backend sends (logs in DEV) a 6-digit OTP to the new mobile number.
+   */
+  requestMobileChange: (newMobile: string, currentPassword: string) =>
+    request<{ message: string }>("/auth/mobile/change-request", {
+      method: "POST",
+      body: JSON.stringify({ newMobile, currentPassword }),
+    }),
+
+  /**
+   * Step 2: Submit the OTP to confirm the mobile change.
+   * On success backend returns sessionInvalidated=true → frontend must logout.
+   */
+  verifyMobileChangeOtp: (newMobile: string, otp: string) =>
+    request<{ message: string; newMobile: string; sessionInvalidated: string }>(
+      "/auth/mobile/verify-otp",
+      { method: "POST", body: JSON.stringify({ newMobile, otp }) }
+    ),
 };
+

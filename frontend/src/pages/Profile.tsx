@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { api, type ProfileResponse } from "../data/api";
+import ChangeMobileModal from "../components/ChangeMobileModal";
 
 const STATE_DISTRICTS: Record<string, string[]> = {
   "Andhra Pradesh": ["Anantapur","Chittoor","East Godavari","Guntur","Krishna","Kurnool","Nellore","Prakasam","Srikakulam","Visakhapatnam","Vizianagaram","West Godavari","YSR Kadapa"],
@@ -62,7 +63,7 @@ function progressColor(pct: number) {
 }
 
 export default function Profile() {
-  const { authUser, setAuthUser } = useApp();
+  const { authUser, setAuthUser, logout } = useApp();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<ProfileResponse | null>(null);
   const [editMode, setEditMode] = useState(false);
@@ -73,6 +74,7 @@ export default function Profile() {
   const [fetchErrorMsg, setFetchErrorMsg] = useState("");
   const [apiError, setApiError] = useState("");
   const [redirectTo, setRedirectTo] = useState<string | null>(null);
+  const [showMobileModal, setShowMobileModal] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -234,6 +236,19 @@ export default function Profile() {
 
   return (
     <div className="page">
+      {/* Mobile change modal */}
+      {showMobileModal && profile && (
+        <ChangeMobileModal
+          currentMobile={profile.mobile}
+          onClose={() => setShowMobileModal(false)}
+          onSuccess={(_newMobile) => {
+            // Invalidate the JWT session — the old token is now useless on backend
+            logout();
+            navigate("/login", { replace: true, state: { mobileChanged: true } });
+          }}
+        />
+      )}
+
       {/* Profile header card */}
       <div className="profile-header-card">
         <div className="profile-avatar">{(profile.firstName || profile.displayUsername).charAt(0).toUpperCase()}</div>
@@ -242,11 +257,21 @@ export default function Profile() {
           <span className="profile-username">@{profile.displayUsername}</span>
           <span className="profile-mobile">📱 {profile.mobile}</span>
         </div>
-        {!editMode && (
-          <button className="btn btn-primary" style={{ marginLeft: "auto" }} onClick={() => setEditMode(true)}>
-            ✏️ Edit Profile
+        <div style={{ marginLeft: "auto", display: "flex", flexDirection: "column", gap: "0.5rem", alignItems: "flex-end" }}>
+          {!editMode && (
+            <button className="btn btn-primary" onClick={() => setEditMode(true)}>
+              ✏️ Edit Profile
+            </button>
+          )}
+          <button
+            id="change-mobile-btn"
+            className="btn btn-secondary"
+            style={{ fontSize: "0.8rem", padding: "0.4rem 0.85rem" }}
+            onClick={() => setShowMobileModal(true)}
+          >
+            🔐 Change Mobile
           </button>
-        )}
+        </div>
       </div>
 
       {/* Completion progress bar */}
