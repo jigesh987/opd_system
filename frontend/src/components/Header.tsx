@@ -8,6 +8,11 @@ export default function Header() {
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // Do not render Patient Navbar inside Admin Portal routes
+  if (location.pathname.startsWith("/admin")) {
+    return null;
+  }
+
   const isAdmin = authUser?.role === "ADMIN";
   const isPatient = authUser?.role === "PATIENT";
 
@@ -18,7 +23,7 @@ export default function Header() {
     { to: "/chatbot", label: t("findDoctor"), show: true },
     { to: "/followup", label: t("myFollowUps"), show: true },
     { to: "/my-appointments", label: "My Appointments", show: isPatient },
-    { to: "/dashboard", label: t("dashboard"), show: isAdmin },
+    { to: "/admin", label: "Admin Panel", show: isAdmin },
   ];
 
   function handleLogout() {

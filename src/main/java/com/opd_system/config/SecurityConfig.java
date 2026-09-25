@@ -43,7 +43,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/appointments").hasRole("PATIENT")
                 .requestMatchers(HttpMethod.GET, "/api/appointments/mine").hasRole("PATIENT")
                 // Admin only
-                .requestMatchers("/api/dashboard/**").hasRole("ADMIN")
+                .requestMatchers("/api/admin/**", "/api/dashboard/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/appointments").hasRole("ADMIN")
                 // Everything else needs auth
                 .anyRequest().authenticated()

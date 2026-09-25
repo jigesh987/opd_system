@@ -1,8 +1,11 @@
 package com.opd_system.service;
 
 import com.opd_system.dto.DashboardResponse;
+import com.opd_system.entity.User;
 import com.opd_system.repository.AppointmentRepository;
+import com.opd_system.repository.DoctorRepository;
 import com.opd_system.repository.FollowUpRepository;
+import com.opd_system.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,7 +18,9 @@ import java.util.concurrent.atomic.AtomicLong;
 @RequiredArgsConstructor
 public class DashboardService {
 
+    private final DoctorRepository doctorRepo;
     private final AppointmentRepository appointmentRepo;
+    private final UserRepository userRepo;
     private final FollowUpRepository followUpRepo;
 
     // In-memory counter for chatbot requests (no persistence needed for demo)
@@ -23,17 +28,20 @@ public class DashboardService {
 
     public DashboardResponse getStats() {
         DashboardResponse r = new DashboardResponse();
+        r.setTotalDoctors(doctorRepo.count());
         r.setTotalAppointments(appointmentRepo.count());
-        r.setChatbotRequests(chatbotCounter.get());
+        r.setTodayAppointments(appointmentRepo.countByAppointmentDate(LocalDate.now()));
+        r.setTotalPatients(userRepo.countByRole(User.Role.PATIENT));
         r.setFollowUpsDue(followUpRepo.countByFollowUpDateBeforeAndReminderSentFalse(LocalDate.now().plusDays(7)));
+        r.setChatbotRequests(chatbotCounter.get());
 
         List<Map<String, Object>> deptWise = appointmentRepo.countByDepartment().stream()
-                .map(row -> Map.<String, Object>of("department", row[0], "count", row[1]))
+                .map(row -> Map.<String, Object>of("department", row[0] != null ? row[0] : "General", "count", row[1]))
                 .toList();
         r.setDepartmentWise(deptWise);
 
         List<Map<String, Object>> langUsage = appointmentRepo.countByLanguage().stream()
-                .map(row -> Map.<String, Object>of("language", row[0] != null ? row[0] : "Unknown", "count", row[1]))
+                .map(row -> Map.<String, Object>of("language", row[0] != null ? row[0] : "English", "count", row[1]))
                 .toList();
         r.setLanguageUsage(langUsage);
         return r;

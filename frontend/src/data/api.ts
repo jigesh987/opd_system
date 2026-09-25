@@ -78,6 +78,18 @@ export interface DoctorApi {
   rating?: number;
   opdDays?: string;
   availableSlots?: string;
+  active?: boolean;
+}
+
+export interface DashboardResponseApi {
+  totalDoctors: number;
+  totalAppointments: number;
+  todayAppointments: number;
+  totalPatients: number;
+  followUpsDue: number;
+  chatbotRequests: number;
+  departmentWise: { department: string; count: number }[];
+  languageUsage: { language: string; count: number }[];
 }
 
 export const api = {
@@ -122,7 +134,7 @@ export const api = {
 
   // ── Dashboard ───────────────────────────────────────────────────────────────
   getDashboard: () =>
-    request<object>("/dashboard"),
+    request<DashboardResponseApi>("/dashboard"),
 
   // ── Doctors ─────────────────────────────────────────────────────────────────
   getDoctors: () =>
@@ -132,4 +144,16 @@ export const api = {
     request<DoctorApi[]>(
       `/doctors/by-department?department=${encodeURIComponent(department)}`
     ),
+
+  getAdminDoctors: () =>
+    request<DoctorApi[]>("/admin/doctors"),
+
+  addDoctor: (data: Partial<DoctorApi>) =>
+    request<DoctorApi>("/admin/doctors", { method: "POST", body: JSON.stringify(data) }),
+
+  updateDoctor: (id: number, data: Partial<DoctorApi>) =>
+    request<DoctorApi>(`/admin/doctors/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+
+  toggleDoctorStatus: (id: number, active?: boolean) =>
+    request<DoctorApi>(`/admin/doctors/${id}/status${active !== undefined ? `?active=${active}` : ""}`, { method: "PATCH" }),
 };

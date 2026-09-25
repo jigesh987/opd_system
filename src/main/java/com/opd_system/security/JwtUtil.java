@@ -1,23 +1,25 @@
 package com.opd_system.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
+import java.nio.charset.StandardCharsets;
+import java.util.Date;
+
+import javax.crypto.SecretKey;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
-import java.util.Date;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
 
 @Component
 public class JwtUtil {
 
-    @Value("${jwt.secret:SmartOPDConnectSecretKey2024SuperSecureKeyForJWT}")
+    @Value("${jwt.secret}")
     private String secret;
 
-    @Value("${jwt.expiration-ms:86400000}")
+    @Value("${jwt.expiration-ms}")
     private long expirationMs;
 
     private SecretKey key() {

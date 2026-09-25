@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppProvider } from "./context/AppContext";
 import Header from "./components/Header";
 import RequireRole from "./components/RequireRole";
@@ -7,7 +7,7 @@ import Doctors from "./pages/Doctors";
 import BookAppointment from "./pages/BookAppointment";
 import ChatBot from "./pages/ChatBot";
 import FollowUp from "./pages/FollowUp";
-import Dashboard from "./pages/Dashboard";
+import AdminLayout from "./pages/AdminLayout";
 import PatientDashboard from "./pages/PatientDashboard";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
@@ -27,7 +27,9 @@ export default function App() {
             <Route path="/chatbot" element={<ChatBot />} />
             <Route path="/followup" element={<FollowUp />} />
             <Route path="/my-appointments" element={<RequireRole role="PATIENT"><PatientDashboard /></RequireRole>} />
-            <Route path="/dashboard" element={<RequireRole role="ADMIN"><Dashboard /></RequireRole>} />
+            <Route path="/admin" element={<RequireRole role="ADMIN"><AdminLayout /></RequireRole>} />
+            <Route path="/admin/*" element={<RequireRole role="ADMIN"><AdminLayout /></RequireRole>} />
+            <Route path="/dashboard" element={<Navigate to="/admin" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<RequireRole role="PATIENT"><Profile /></RequireRole>} />
           </Routes>

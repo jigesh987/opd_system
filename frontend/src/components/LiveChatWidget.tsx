@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useApp } from "../context/AppContext";
 import { DEPARTMENTS } from "../data/doctors";
 
@@ -51,6 +51,8 @@ const DEPT_NAME_MAP: Record<string, string> = {
 export default function LiveChatWidget() {
   const { t, setPreselectedDept, setPreselectedDoctor } = useApp();
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [open, setOpen] = useState(false);
   const [chatLang, setChatLang] = useState<ChatLang | null>(null);
   const [input, setInput] = useState("");
@@ -76,6 +78,10 @@ function detectBookingInfo(text: string): { dept: string; doctor: string }[] | u
   useEffect(() => {
     messagesEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, sending]);
+
+  if (location.pathname.startsWith("/admin")) {
+    return null;
+  }
 
   function handleOpen() {
     setOpen(true);

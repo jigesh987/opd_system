@@ -38,6 +38,14 @@ public class Doctor {
     @Column(length = 50)
     private String opdDays;
 
-    @Column(nullable = false)
-    private boolean isActive = true;
+    @Column(name = "is_active", nullable = false, columnDefinition = "tinyint(1) default 1")
+    private boolean active = true;
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean active) {
+        this.active = active;
+    }
 }

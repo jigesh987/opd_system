@@ -14,6 +14,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, String
 
     boolean existsByDoctorAndAppointmentDateAndTimeSlot(String doctor, LocalDate date, String slot);
 
+    long countByAppointmentDate(LocalDate date);
+
     @Query("SELECT a.department, COUNT(a) FROM Appointment a GROUP BY a.department")
     List<Object[]> countByDepartment();
 
